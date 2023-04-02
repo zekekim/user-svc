@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    hostname: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./user-service:/usr/src/user-service
+      - /usr/src/user-service/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/user-service
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      - mongo
+    command: >
+      sh -c "npm install && npm run dev"
+
+volumes:
+  mongodb_data:
+
